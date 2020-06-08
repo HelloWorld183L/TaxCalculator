@@ -2,6 +2,21 @@
 open TaxDomain
 
 module CLIModule =
+    let inputBlindAllowance =
+        Console.Write("Are you blind? (Y/N)")
+        Console.ReadLine()
+        |> getIsBlindAllowance
+
+    let inputMarriageAllowance totalGrossIncome =
+        Console.Write("Has your partner transfered marriage allowance to you? (Y/N)")
+        let response = Console.ReadLine()
+        getMarriageAllowance response totalGrossIncome
+
+    let inputLivesInScotland =
+        Console.Write("Do you live in Scotland? (Y/N)")
+        Console.ReadLine()
+        |> getLivesInScotland
+
     [<EntryPoint>]
     let main argv =
         Console.Write("Enter your total gross income per year: ")
@@ -11,30 +26,13 @@ module CLIModule =
             Console.WriteLine e
             0
         | Ok totalGrossIncome ->
-            Console.Write("Are you blind? (Y/N)")
-            let blindAllowance =
-                Console.ReadLine()
-                |> getIsBlindAllowance 
-            
-            let marriageAllowance =
-                Console.Write("Has your partner transfered marriage allowance to you? (Y/N)")
-                let response = Console.ReadLine()
-                getMarriageAllowance response totalGrossIncome
-            
-            Console.Write("Do you live in Scotland? (Y/N)")
-            let livesInScotland = 
-                Console.ReadLine()
-                |> getLivesInScotland
-
-            let allowances = [blindAllowance; marriageAllowance]
+            let allowances = [inputBlindAllowance; inputMarriageAllowance totalGrossIncome]
             let personalAllowance = getPersonalAllowance totalGrossIncome allowances
-            Console.WriteLine("Personal allowance = " + personalAllowance.ToString()) 
+            let taxableIncome = totalGrossIncome - personalAllowance
+            let livesInScotland = inputLivesInScotland
             let taxRate =
                 if livesInScotland then getScotlandTaxRate totalGrossIncome
                 else getCommonTaxRate totalGrossIncome
-            Console.WriteLine("Tax rate = " + taxRate.ToString())
-
-            let taxableIncome = totalGrossIncome - personalAllowance
             let incomeTax = taxableIncome * taxRate
             Console.WriteLine("Your income tax is: " + incomeTax.ToString())
             0

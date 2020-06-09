@@ -8,17 +8,26 @@ module TaxDomain
             else Error "The total gross income must be greater than 0, please enter the correct input again!"
         | _ -> Error "Invalid number!" 
 
-    let rec getLivesInScotland(response: string) =
-        match response with
-            | "Y" | "y" -> true
-            | "N" | "n" -> false
-            | _ -> getLivesInScotland response
+    let (|Yes|No|InputError|) = function
+        | "Y" | "y" -> Yes
+        | "N" | "n" -> No
+        | _ -> InputError
 
-    let rec getIsBlindAllowance(response : string) =
+    let rec getLivesInScotland response errorFunc =
         match response with
-            | "Y" | "y" -> 2500m
-            | "N" | "n" -> 0m
-            | _ -> getIsBlindAllowance response
+            | Yes -> true
+            | No -> false
+            | InputError ->
+                errorFunc()
+                getLivesInScotland response errorFunc
+
+    let rec getIsBlindAllowance response errorFunc =
+        match response with
+            | Yes -> 2500m
+            | No -> 0m
+            | InputError ->
+                errorFunc()
+                getIsBlindAllowance response errorFunc
 
     let getCommonTaxRate totalGrossIncome =
         if totalGrossIncome <= 12500m then 0m
@@ -44,10 +53,12 @@ module TaxDomain
             if lessThanZero then 0m
             else evenCount
         
-    let rec getMarriageAllowance decision totalGrossIncome =
+    let rec getMarriageAllowance decision totalGrossIncome errorFunc =
         if totalGrossIncome <= 12500m then 0m
         else
             match decision with
-            | "Y" | "y" -> 1250m
-            | "N" | "n" -> 0m
-            | _ -> getMarriageAllowance decision totalGrossIncome
+            | Yes -> 1250m
+            | No -> 0m
+            | InputError ->
+                errorFunc()
+                getMarriageAllowance decision totalGrossIncome errorFunc
